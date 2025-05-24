@@ -143,7 +143,7 @@ def final_event(pokemon):
     rayquaza = Pokemon("Rayquaza", level=100, hp=500, atk=150, defense=100)
     slow_print("RAYQUAZA roars, challenging Mewtwo!")
 
-    mewtwo = Pokemon("Mewtwo", level=100, hp=400, atk=140, defense=90)
+    mewtwo = Pokemon("Mewtwo", level=100, hp=350, atk=140, defense=90)
 
     while not rayquaza.is_fainted() and not mewtwo.is_fainted():
         input("\nPress Enter to attack!")
