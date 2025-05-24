@@ -1,5 +1,9 @@
 import time
 import random
+import json
+import os
+
+SAVE_FILE = "save_data.json"
 
 class Pokemon:
     def __init__(self, name, level, hp, atk, defense):
@@ -47,6 +51,24 @@ class Pokemon:
         print("Stats increased!")
         self.summary()
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "level": self.level,
+            "hp": self.hp,
+            "atk": self.atk,
+            "defense": self.defense,
+            "xp": self.xp,
+            "max_hp": self.max_hp
+        }
+
+    @staticmethod
+    def from_dict(data):
+        p = Pokemon(data["name"], data["level"], data["hp"], data["atk"], data["defense"])
+        p.xp = data["xp"]
+        p.max_hp = data["max_hp"]
+        return p
+
 def slow_print(text, delay=0.04):
     for char in text:
         print(char, end='', flush=True)
@@ -82,6 +104,18 @@ def battle(player_pokemon):
             return
         else:
             print("Invalid input. Please choose again.")
+
+def save_game(pokemon):
+    with open(SAVE_FILE, "w") as f:
+        json.dump(pokemon.to_dict(), f)
+    print("Game saved.")
+
+def load_game():
+    if os.path.exists(SAVE_FILE):
+        with open(SAVE_FILE, "r") as f:
+            data = json.load(f)
+            return Pokemon.from_dict(data)
+    return None
 
 def final_event(pokemon):
     slow_print("\nSuddenly, alarms ring out across the town... Team Rocket is attacking!")
@@ -127,6 +161,28 @@ def final_event(pokemon):
         slow_print("Even Rayquaza fell... the town is doomed...")
 
 def intro():
+    pokemon = load_game()
+    if pokemon:
+        print("Loaded previous save.")
+        pokemon.summary()
+        while not pokemon.is_fainted():
+            if pokemon.level >= 100:
+                final_event(pokemon)
+                break
+            choice = input("\nWhat would you like to do? [B]attle | [S]ummary | [Q]uit | [Save]: ").lower()
+            if choice == 'b':
+                battle(pokemon)
+            elif choice == 's':
+                pokemon.summary()
+            elif choice == 'save':
+                save_game(pokemon)
+            elif choice == 'q':
+                save_game(pokemon)
+                print("Goodbye!")
+                break
+            else:
+                print("Invalid choice.")
+        return
     slow_print("......")
     time.sleep(1)
     slow_print("You wake up at the entrance of a dark tunnel, your mind blank.")
@@ -153,29 +209,25 @@ def intro():
     nickname = input("What will you name your Caterpie?: ")
     slow_print(f"Professor Oak: I see. So your new partner is {nickname}.")
     slow_print("From here, your grand adventure begins...")
+    pokemon = Pokemon(nickname, level=5, hp=20, atk=7, defense=4)
 
-    caterpie = Pokemon(nickname, level=5, hp=20, atk=7, defense=4)
-
-    input("\nPress Enter to view your Pokémon's stats...")
-    print("====== Your Pokémon Stats ======")
-    caterpie.summary()
-
-    # Start battle loop
-    while not caterpie.is_fainted():
-        if caterpie.level >= 100:
-            final_event(caterpie)
+    while not pokemon.is_fainted():
+        if pokemon.level >= 100:
+            final_event(pokemon)
             break
-
-        choice = input("\nWhat would you like to do? [B]attle | [S]ummary | [Q]uit: ").lower()
+        choice = input("\nWhat would you like to do? [B]attle | [S]ummary | [Q]uit | [Save]: ").lower()
         if choice == 'b':
-            battle(caterpie)
+            battle(pokemon)
         elif choice == 's':
-            caterpie.summary()
+            pokemon.summary()
+        elif choice == 'save':
+            save_game(pokemon)
         elif choice == 'q':
-            print("Ending your adventure...")
+            save_game(pokemon)
+            print("Game saved. Goodbye!")
             break
         else:
-            print("Invalid choice. Try again.")
+            print("Invalid choice.")
 
 if __name__ == "__main__":
     intro()
